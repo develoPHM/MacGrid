@@ -17,7 +17,8 @@ enum WallpaperCapture {
         let mtime = (try? storeURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate)?
             .timeIntervalSince1970 ?? 0
         let dark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        return "\(mtime)-\(dark)"
+        let w = Int(NSScreen.screens.map(\.frame.width).max() ?? 0)   // 모니터가 바뀌면 그 해상도로 다시 축소
+        return "\(mtime)-\(dark)-\(w)"
     }
 
     static func load(for screen: NSScreen?) async -> NSImage? {
@@ -62,12 +63,15 @@ enum WallpaperCapture {
         let opts = PHImageRequestOptions()
         opts.isSynchronous = true
         opts.deliveryMode = .highQualityFormat
+        opts.resizeMode = .fast             // 로컬 파생본으로 빠르게 (.exact 는 iCloud 원본을 받을 때까지 기다림)
         opts.isNetworkAccessAllowed = true   // iCloud 에만 있는 원본도 받아온다
         var result: NSImage?
-        PHImageManager.default().requestImage(for: asset,
-                                              targetSize: CGSize(width: targetSize.width * 2, height: targetSize.height * 2),
+        PHImageManager().requestImage(for: asset,   // default() 는 결과를 프로세스 캐시에 붙들어 둔다 → 일회용
+                                              targetSize: targetSize,
                                               contentMode: .aspectFill, options: opts) { img, _ in result = img }
-        return result
+        // PhotoKit 은 targetSize 를 힌트로만 쓰고 원본(수천만 화소, 100MB+)을 주기도 한다 → 반드시 축소해서 원본은 버린다
+        guard let cg = result?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        return downscaled(cg, targetSize: targetSize)
     }
 
     // MARK: 현재 배경화면 파일 찾기
@@ -149,11 +153,22 @@ enum WallpaperCapture {
                 ?? images.max(by: { size($0) < size($1) }))
     }
 
+    // MARK: 흐림
+
+    /// 설정 흐림값을 이미지에 직접 적용 (1x 해상도라 수십 ms)
+    static func blurred(_ img: NSImage, radius: CGFloat) async -> NSImage {
+        guard radius > 0, let cg = img.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return img }
+        let src = CIImage(cgImage: cg)
+        let ci = src.clampedToExtent().applyingGaussianBlur(sigma: radius).cropped(to: src.extent)
+        guard let out = CIContext().createCGImage(ci, from: ci.extent) else { return img }
+        return NSImage(cgImage: out, size: img.size)
+    }
+
     // MARK: 축소
 
-    /// 흐림은 SwiftUI .blur 로 설정값에 따라 적용하므로 여기서는 화면 폭(2x)까지만 축소한다.
+    /// 배경은 아이콘 뒤에 깔리는 그림이라 화면 폭(1x 포인트) 이면 충분하다. (2x 로 두면 5K 화면에서 60MB+)
     private static func downscaled(_ cg: CGImage, targetSize: CGSize) -> NSImage? {
-        let maxW = max(targetSize.width * 2, 1600)
+        let maxW = max(targetSize.width, 1600)
         guard CGFloat(cg.width) > maxW else { return NSImage(cgImage: cg, size: targetSize) }
         let scale = maxW / CGFloat(cg.width)
         let ci = CIImage(cgImage: cg).transformed(by: CGAffineTransform(scaleX: scale, y: scale))

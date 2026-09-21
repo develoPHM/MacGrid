@@ -19,9 +19,7 @@ enum AppScanner {
                 if n.hasSuffix(".app") {
                     guard let bundle = Bundle(path: p) else { continue }
                     let name = localizedName(of: bundle) ?? fm.displayName(atPath: p)
-                    let icon = NSWorkspace.shared.icon(forFile: p)
-                    icon.size = NSSize(width: 256, height: 256)
-                    found[p] = AppEntry(path: p, name: name, icon: icon)
+                    found[p] = AppEntry(path: p, name: name, icon: flatIcon(for: p))
                 } else if depth < 2 {
                     var isDir: ObjCBool = false
                     if fm.fileExists(atPath: p, isDirectory: &isDir), isDir.boolValue {
@@ -33,6 +31,26 @@ enum AppScanner {
 
         roots.forEach { visit($0, depth: 0) }
         return found.values.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// NSWorkspace 아이콘은 16~1024px 표현을 전부 들고 있어 앱당 수 MB 를 잡는다.
+    /// 화면에 그리는 최대 크기(128pt × 화면 배율) 비트맵 하나로 눌러서 보관한다. (1x 화면 64KB, 2x 256KB)
+    /// 모니터를 바꿔 배율이 달라지면(1x↔2x) 값이 바뀌고, reconcile 이 아이콘을 다시 만든다
+    static var iconPx: Int { Int(128 * (NSScreen.screens.map(\.backingScaleFactor).max() ?? 2)) }
+
+    private static func flatIcon(for path: String) -> NSImage {
+        let src = NSWorkspace.shared.icon(forFile: path)
+        let px = iconPx
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: px, pixelsHigh: px, bitsPerSample: 8,
+                                         samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return src }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        src.draw(in: NSRect(x: 0, y: 0, width: px, height: px), from: .zero, operation: .copy, fraction: 1)
+        NSGraphicsContext.restoreGraphicsState()
+        let out = NSImage(size: NSSize(width: 128, height: 128))
+        out.addRepresentation(rep)
+        return out
     }
 
     // MARK: 사용자 언어로 앱 이름 찾기

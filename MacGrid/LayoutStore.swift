@@ -45,8 +45,9 @@ final class LayoutStore: ObservableObject {
     func reconcile(_ entries: [AppEntry]) {
         var dict: [String: AppEntry] = [:]
         for e in entries { dict[e.path] = e }
-        // 앱 목록이 그대로면 아이콘 객체를 갈아끼우지 않는다 (아이콘 깜빡임 방지)
-        if Set(dict.keys) == Set(apps.keys) { return }
+        // 앱 목록이 그대로고 아이콘 해상도(화면 배율)도 그대로면 아이콘 객체를 갈아끼우지 않는다 (깜빡임 방지)
+        let px = { (e: AppEntry?) in e?.icon.representations.first?.pixelsWide ?? 0 }
+        if Set(dict.keys) == Set(apps.keys), px(dict.values.first) == px(apps.values.first) { return }
         apps = dict
         let known = Set(dict.keys)
         var placed = Set<String>()

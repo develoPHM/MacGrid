@@ -254,19 +254,22 @@ struct Background: View {
     let size: CGSize
     @EnvironmentObject var ui: UIState
     @ObservedObject var settings = AppSettings.shared
+    @State private var blurred: NSImage?   // 흐림을 미리 구운 이미지 (.blur 레이어는 전체화면 버퍼를 수십 MB 잡는다)
 
     var body: some View {
         Group {
             if settings.bgMode == "solid" {
                 settings.bgColor
             } else if let img = ui.wallpaper {
-                Image(nsImage: img)
+                Image(nsImage: blurred ?? img)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size.width, height: size.height)
                     .clipped()
-                    .blur(radius: settings.bgBlur)     // 정적 이미지라 값이 바뀔 때만 다시 그림
                     .overlay(Color.black.opacity(0.2))   // 아이콘 가독성
+                    .task(id: "\(ObjectIdentifier(img).hashValue)-\(settings.bgBlur)") {
+                        blurred = await WallpaperCapture.blurred(img, radius: settings.bgBlur)
+                    }
             } else {
                 settings.bgColor   // 배경화면 파일을 못 찾았을 때 폴백 (뒤가 비치지 않게 불투명)
             }

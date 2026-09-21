@@ -1,6 +1,6 @@
 # MacGrid — Tahoe 이후 런치패드 재현
 
-macOS Tahoe에서 사라진 Launchpad를 그대로 재현한 앱. SwiftUI + AppKit, macOS 14 이상.
+macOS Tahoe에서 사라진 Launchpad를 그대로 재현한 앱. SwiftUI + AppKit, macOS 26(Tahoe) 이상, Apple Silicon 전용.
 
 ## 설치
 

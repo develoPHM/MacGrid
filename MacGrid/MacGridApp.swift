@@ -65,6 +65,7 @@ final class LaunchpadWindow: NSWindow {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: LaunchpadWindow!
+    private var root: AnyView!   // 숨길 때 contentView 를 비우고, 보일 때 다시 만든다
     private var store: LayoutStore!
     private var ui: UIState!
     private var drag: DragController!
@@ -88,10 +89,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         drag = DragController(store: store, ui: ui)
         ui.onClose = { [weak self] in self?.hideLaunchpad() }
 
-        let root = LaunchpadRoot()
+        root = AnyView(LaunchpadRoot()
             .environmentObject(store)
             .environmentObject(ui)
-            .environmentObject(drag)
+            .environmentObject(drag))
         window = LaunchpadWindow(rootView: root)
 
         // 로컬 이벤트 모니터는 항상 메인 스레드에서 불린다 (클로저는 메인액터 격리를 상속)
@@ -164,10 +165,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         presented = true
         ui.reset()
         store.refreshApps()
+        if window.contentView == nil { window.contentView = NSHostingView(rootView: root) }
         window.present()
         let ui = self.ui!   // 클로저에는 self 대신 상수로 캡처 (Swift 6 동시성 경고 회피)
         let key = WallpaperCapture.changeKey
-        if ui.wallpaper == nil || key != wallpaperKey {   // 배경화면 설정이 바뀌었을 때만 다시 로드
+        if AppSettings.shared.bgMode == "solid" {
+            ui.wallpaper = nil; wallpaperKey = ""            // 단색이면 배경화면 이미지를 아예 안 들고 있는다
+        } else if ui.wallpaper == nil || key != wallpaperKey {   // 배경화면 설정이 바뀌었을 때만 다시 로드
             wallpaperKey = key
             let screen = window.screen ?? NSScreen.main
             Task.detached(priority: .userInitiated) {
@@ -184,7 +188,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard presented else { return }
         presented = false
         ui.visible = false
-        window.dismiss { NSApp.hide(nil) }
+        window.dismiss {
+            NSApp.hide(nil)
+            self.window.contentView = nil   // 전체화면 레이어 버퍼 반납 (숨어 있을 때 메모리 ~40MB 수준)
+        }
     }
 
     // MARK: 키보드
