@@ -49,7 +49,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440)
+        .frame(width: 440, height: 470)   // 내용이 다 보이도록 고정 높이 (스크롤 생기지 않게)
+        .scrollDisabled(true)
         .background(WindowLevelRaiser())
     }
 }
