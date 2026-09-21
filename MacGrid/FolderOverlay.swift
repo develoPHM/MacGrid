@@ -56,6 +56,8 @@ struct FolderOverlay: View {
                 .offset(x: -CGFloat(page) * grid.frame.width)
                 .frame(width: grid.frame.width, height: grid.frame.height, alignment: .leading)
                 .clipped()
+                .contentShape(Rectangle())   // 빈 곳 드래그로도 페이지 넘김
+                .gesture(DragGesture(minimumDistance: 10).onEnded { ui.folderSwipeEnded($0.translation.width) })
                 .animation(.spring(response: 0.35, dampingFraction: 0.85), value: page)
 
                 if pageCount > 1 {

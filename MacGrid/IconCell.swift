@@ -113,7 +113,7 @@ struct IconCell: View {
 
                 if t.dragging { return }   // 드래그 중 위치는 DragController 모니터가 처리
                 if t.swiping {
-                    ui.swipeChanged(v.translation.width)
+                    if context.isPage { ui.swipeChanged(v.translation.width) }
                     return
                 }
                 let dist = hypot(v.translation.width, v.translation.height)
@@ -126,10 +126,8 @@ struct IconCell: View {
                 }
                 if dist > 10 {
                     t.work?.cancel()
-                    if context.isPage {
-                        t.swiping = true
-                        ui.swipeChanged(v.translation.width)
-                    }
+                    t.swiping = true   // 페이지: 손가락 따라감 / 폴더: 놓을 때 판정
+                    if context.isPage { ui.swipeChanged(v.translation.width) }
                 }
             }
             .onEnded { v in
@@ -139,7 +137,8 @@ struct IconCell: View {
                 if t.dragging {
                     // 놓기는 DragController 의 mouseUp 모니터가 처리 (셀이 이미 파괴됐을 수 있음)
                 } else if t.swiping {
-                    ui.swipeEnded(v.translation.width, predicted: v.predictedEndTranslation.width)
+                    if context.isPage { ui.swipeEnded(v.translation.width, predicted: v.predictedEndTranslation.width) }
+                    else { ui.folderSwipeEnded(v.translation.width) }
                 } else if abs(v.translation.width) < 6 && abs(v.translation.height) < 6 {
                     activate()
                 }

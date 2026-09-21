@@ -43,6 +43,12 @@ final class UIState: ObservableObject {
         withAnimation(spring) { folderPage = c }
     }
 
+    /// 폴더 안 마우스 드래그: 놓을 때 거리로 한 페이지 넘김 (폴더는 손가락 따라가기 없이 한 칸씩)
+    func folderSwipeEnded(_ dx: CGFloat) {
+        guard abs(dx) > 50 else { return }
+        goToFolderPage(folderPage + (dx < 0 ? 1 : -1))
+    }
+
     func swipeChanged(_ dx: CGFloat) {
         var v = dx
         if (currentPage == 0 && dx > 0) || (currentPage == pageCount - 1 && dx < 0) { v = dx / 3 }
