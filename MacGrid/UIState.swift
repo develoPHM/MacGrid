@@ -4,7 +4,8 @@ import AppKit
 /// 화면 상태 (페이지, 편집모드, 열린 폴더, 검색어, 스와이프)
 @MainActor
 final class UIState: ObservableObject {
-    @Published var visible = false
+    @Published var visible = false { didSet { if !visible { hiddenAt = Date() } } }
+    private var hiddenAt = Date.distantPast
     @Published var currentPage = 0
     @Published var editMode = false
     @Published var openFolderID: String? { didSet { folderPage = 0 } }
@@ -97,6 +98,8 @@ final class UIState: ObservableObject {
         openFolderID = nil
         query = ""
         motion.swipeOffset = 0
+        // 닫은 지 1분 넘게 지났으면 1페이지부터 (잠깐 껐다 켠 건 보던 페이지 유지)
+        if Date().timeIntervalSince(hiddenAt) > 60 { currentPage = 0 }
         currentPage = min(currentPage, max(pageCount - 1, 0))
     }
 }
