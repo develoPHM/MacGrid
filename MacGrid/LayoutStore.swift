@@ -143,7 +143,8 @@ final class LayoutStore: ObservableObject {
         guard let src = indexOf(id) else { return }
         let item = pages[src.page].remove(at: src.index)
         ensurePage(page)
-        let idx = min(max(index, 0), pages[page].count)
+        // 꽉 찬 페이지면 마지막 칸(perPage-1)까지만 → 그 페이지의 기존 마지막 아이콘이 다음 페이지로 밀린다 (Launchpad 방식)
+        let idx = min(max(index, 0), pages[page].count, Self.perPage - 1)
         pages[page].insert(item, at: idx)
         normalize()
     }
