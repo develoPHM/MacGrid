@@ -27,7 +27,7 @@ macOS Tahoe에서 사라진 Launchpad를 그대로 재현한 앱. SwiftUI + AppK
 Xcode가 설치돼 있어야 한다 (App Store).
 
 ```bash
-git clone https://github.com/<you>/MacGrid.git
+git clone https://github.com/develoPHM/MacGrid.git
 cd MacGrid
 ./install.sh
 ```

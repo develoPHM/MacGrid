@@ -27,7 +27,7 @@ A faithful recreation of Launchpad, which Apple removed in macOS Tahoe. SwiftUI 
 Xcode must be installed (App Store).
 
 ```bash
-git clone https://github.com/<you>/MacGrid.git
+git clone https://github.com/develoPHM/MacGrid.git
 cd MacGrid
 ./install.sh
 ```
