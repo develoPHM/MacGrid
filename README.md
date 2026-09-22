@@ -1,64 +1,100 @@
-# MacGrid — Tahoe 이후 런치패드 재현
+# MacGrid — Launchpad for macOS Tahoe and later
 
-macOS Tahoe에서 사라진 Launchpad를 그대로 재현한 앱. SwiftUI + AppKit, macOS 26(Tahoe) 이상, Apple Silicon 전용.
+**English** | [한국어](README.ko.md)
 
-## 설치
+A faithful recreation of Launchpad, which Apple removed in macOS Tahoe. SwiftUI + AppKit. Requires macOS 26 (Tahoe) or later on Apple Silicon.
 
-Xcode가 설치돼 있어야 한다 (App Store).
+![MacGrid](docs/screenshot.png)
+
+## Install
+
+**Requirements:** macOS 26 (Tahoe) or later, Apple Silicon.
+
+### Option 1 — Download
+
+1. Grab `MacGrid.dmg` from the [latest release](../../releases/latest).
+2. Open it and drag `MacGrid.app` to `Applications`.
+3. Before the first launch, run this once in Terminal:
+
+   ```bash
+   xattr -cr /Applications/MacGrid.app
+   ```
+
+   MacGrid is an open-source app without an Apple Developer ID signature, so Gatekeeper marks the download as "damaged". This command clears that flag.
+
+### Option 2 — Build from source
+
+Xcode must be installed (App Store).
 
 ```bash
+git clone https://github.com/<you>/MacGrid.git
 cd MacGrid
 ./install.sh
 ```
 
-빌드 후 `/Applications/MacGrid.app`으로 설치되고 바로 실행된다. 이후엔 **⌃Space**, Dock 아이콘, 메뉴 막대 아이콘으로 열고 닫는다.
-로그인 시 자동 시작·단축키·메뉴 막대 아이콘은 설정(⌘,)에서 켜고 끌 수 있다.
+The script builds the app, installs it to `/Applications/MacGrid.app` and launches it. Apps you build yourself need no `xattr` step.
 
-## 동작
+### After installing
 
-| 동작 | 방법 |
+Open and close MacGrid with **⌃Space**, the Dock icon, or the menu bar icon.
+Launch at login, the hotkey and the menu bar icon can be toggled in Settings (⌘,).
+
+## Usage
+
+| Action | How |
 |---|---|
-| 열기 | Dock 아이콘 클릭 (앱 실행) |
-| 닫기 | ESC, 빈 곳 클릭, 다른 앱으로 전환 |
-| 앱 실행 | 아이콘 클릭 |
-| 페이지 이동 | 가로 드래그, 트랙패드 두 손가락 스와이프, 마우스 휠, ←/→, 하단 점 클릭 |
-| 편집(흔들림) 모드 | 아이콘 0.4초 꾹 누르기 |
-| 재배치 | 편집 모드에서 드래그 (다른 페이지로: 화면 좌/우 가장자리로 끌고 잠시 대기, 마지막 페이지에서 오른쪽 끝 → 새 페이지) |
-| 페이지 정리 | 편집 모드 우상단 "정리" 버튼 — 모든 아이콘을 앞에서부터 꽉 채워 재배치 |
-| 폴더 만들기 | 아이콘을 다른 아이콘 위(중앙)에 올려놓고 놓기 |
-| 폴더에 넣기 | 아이콘을 폴더 위에 놓기 |
-| 폴더에서 꺼내기 | 폴더 열고 아이콘을 패널 밖으로 드래그 |
-| 폴더 페이지 | 폴더 안도 7×5씩 페이지 — 스와이프/휠/←→/점, 드래그 중엔 패널 가장자리 |
-| 폴더 이름 | 폴더 열고 상단 제목 클릭 후 편집 |
-| 검색 | 그냥 타이핑, Return = 첫 결과 실행 |
-| 설정 | 메뉴 MacGrid → Settings…(⌘,): 배경(현재 배경화면/단색), 투명도, 흐림 |
+| Open / close | ⌃Space, Dock icon, menu bar icon / ESC, click empty area, switch to another app |
+| Launch an app | Click its icon |
+| Change page | Horizontal drag, two-finger trackpad swipe, mouse wheel, ←/→, click a page dot |
+| Edit (jiggle) mode | Press and hold an icon for 0.4 s |
+| Rearrange | Drag in edit mode (to another page: drag to the screen edge and wait; past the last page → new page) |
+| Clean Up | "Clean Up" button in edit mode — packs all icons from the front |
+| Create a folder | Drop an icon onto the center of another icon |
+| Add to / remove from folder | Drop an icon onto a folder / open the folder and drag the icon outside the panel |
+| Folder pages | Folders page in 7×5 too — drag / swipe / wheel / ←→ / dots |
+| Rename a folder | Open it and click the title |
+| Search | Just start typing; Return launches the first result |
+| Settings | MacGrid menu → Settings… (⌘,): launch at login, hotkey, menu bar icon, background (current wallpaper / solid color), transparency, blur |
 
-- 앱 삭제 기능은 의도적으로 없음 (Finder에서 삭제하면 다음 열 때 자동 반영).
-- 폴더에 1개만 남으면 폴더는 자동 해체.
-- 배경은 시스템 배경화면 설정 파일을 읽어 표시하며, 배경을 바꾸면 다음 열 때 자동 반영.
+- There is deliberately no way to delete apps. Delete them in Finder; the grid updates on next open.
+- A folder with a single app left is dissolved automatically.
+- The background reads the system wallpaper setting and follows changes on next open. A wallpaper chosen from the Photos app asks for Photos access once.
+- If MacGrid has been closed for more than a minute, it reopens on page 1.
 
-## 스캔 범위
+## Scanned locations
 
-`/Applications`, `/System/Applications`, `~/Applications` (하위 폴더 2단계까지, Utilities 포함).
-아이콘은 `NSWorkspace`, 이름은 각 앱 번들의 로컬라이즈 파일을 시스템 언어 순서로 읽어 Finder와 동일하게 표시.
+`/Applications`, `/System/Applications`, `~/Applications` (two levels deep, including Utilities).
+App names are read from each bundle's localization files in the system language order, so they match Finder.
 
-## 저장 위치
+## Data
 
-배치(페이지/폴더)는 `~/Library/Application Support/MacGrid/layout.json`.
-초기화하려면 이 파일을 지우면 된다 (이름순으로 다시 채워짐).
+Layout (pages / folders) is stored in `~/Library/Application Support/MacGrid/layout.json`. Delete it to reset.
 
-## 파일 구성
+## Source layout
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `MacGridApp.swift` | 진입점, 전체화면 창, 키보드/스크롤 모니터, 표시/숨김 |
-| `AppSettings.swift` / `SettingsView.swift` | 설정값(UserDefaults)과 설정 창 |
-| `WallpaperCapture.swift` | 현재 배경화면 이미지 찾기 |
-| `AppScanner.swift` | 응용 프로그램 폴더 스캔 |
-| `LayoutStore.swift` | 페이지·폴더 모델 편집, 정리, JSON 저장, 앱 변경 반영 |
-| `UIState.swift` | 페이지/편집모드/폴더/검색/스와이프 상태 |
-| `DragController.swift` | 드래그 재배치·폴더 생성·페이지 넘김 로직 |
-| `LaunchpadRoot.swift` | 루트 뷰, 페이저, 검색창, 페이지 점, 고스트, 배경 |
-| `IconCell.swift` | 아이콘 셀(제스처), 아이콘/폴더 아이콘 그림, 흔들림 |
-| `FolderOverlay.swift` | 열린 폴더 패널 |
-| `Models.swift` | 데이터 모델, 그리드 좌표 계산 |
+| `MacGridApp.swift` | Entry point, full-screen window, key / scroll monitors, hotkey · menu bar · login item, show / hide |
+| `AppSettings.swift` / `SettingsView.swift` | Settings (UserDefaults) and the Settings window |
+| `HotKey.swift` | Carbon global hotkey |
+| `WallpaperCapture.swift` | Find the current wallpaper image (file / built-in / Photos) |
+| `AppScanner.swift` | Scan the Applications folders |
+| `LayoutStore.swift` | Page / folder model, clean up, JSON persistence, app reconciliation |
+| `UIState.swift` | Page / edit mode / folder / search / swipe state |
+| `DragController.swift` | Drag-to-rearrange, folder creation, page flipping |
+| `LaunchpadRoot.swift` | Root view, pager, search bar, page dots, drag ghost, background |
+| `IconCell.swift` | Icon cell (gestures), icon / folder icon drawing, jiggle |
+| `FolderOverlay.swift` | Open-folder panel |
+| `Models.swift` | Data models, grid geometry |
+
+## Building a DMG (distribution)
+
+```bash
+./build_dmg.sh        # → dist/MacGrid.dmg
+```
+
+Open the DMG and drag `MacGrid.app` to `Applications`. The app is ad-hoc signed, so on other Macs Gatekeeper shows a "damaged" warning on first launch; run `xattr -cr /Applications/MacGrid.app` or use "Open Anyway" in System Settings → Privacy & Security. Only an Apple Developer ID signature plus notarization removes this.
+
+## License
+
+[MIT](LICENSE)

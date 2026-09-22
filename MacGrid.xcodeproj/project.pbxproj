@@ -257,7 +257,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MacGrid;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "사진 앱에서 고른 배경화면을 MacGrid 배경으로 표시하기 위해 사용합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to show a wallpaper chosen from the Photos app as the MacGrid background.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -288,7 +288,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MacGrid;
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "사진 앱에서 고른 배경화면을 MacGrid 배경으로 표시하기 위해 사용합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Used to show a wallpaper chosen from the Photos app as the MacGrid background.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;

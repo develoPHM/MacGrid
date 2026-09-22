@@ -54,7 +54,7 @@ struct LaunchpadRoot: View {
                 DragGhost(iconSize: layout.iconSize, motion: drag.motion)
                     .zIndex(2)
 
-                // 편집 모드: 상단 "정리" 버튼 — 모든 아이콘을 페이지마다 꽉 채워 재배치
+                // 편집 모드: 상단 "Clean Up" 버튼 — 모든 아이콘을 페이지마다 꽉 채워 재배치
                 if ui.editMode && ui.openFolderID == nil {
                     Button {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
@@ -62,7 +62,7 @@ struct LaunchpadRoot: View {
                             ui.goTo(min(ui.currentPage, store.pages.count - 1))
                         }
                     } label: {
-                        Label("정리", systemImage: "square.grid.3x3.fill")
+                        Label("Clean Up", systemImage: "square.grid.3x3.fill")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 14)
@@ -162,7 +162,7 @@ struct SearchResults: View {
         let results = Array(store.search(ui.query).prefix(layout.capacity))
         ZStack {
             if results.isEmpty {
-                Text("결과 없음")
+                Text("No Results")
                     .font(.system(size: 20, weight: .medium))
                     .foregroundStyle(.white.opacity(0.7))
             }

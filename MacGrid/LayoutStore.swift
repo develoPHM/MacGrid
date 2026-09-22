@@ -161,7 +161,7 @@ final class LayoutStore: ObservableObject {
             removeItem(id)
             normalize()
         case .app(let targetPath):
-            let f = LPItem.folder(name: "제목 없는 폴더", apps: [targetPath, path])
+            let f = LPItem.folder(name: "Untitled Folder", apps: [targetPath, path])
             pages[tp][ti] = f
             removeItem(id)
             normalize()

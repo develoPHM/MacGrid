@@ -31,7 +31,7 @@ struct FolderOverlay: View {
                 .transition(.opacity)
 
             VStack(spacing: LayoutMath.folderSpacing) {
-                TextField("폴더 이름", text: $name)
+                TextField("Folder Name", text: $name)
                     .textFieldStyle(.plain)
                     .multilineTextAlignment(.center)
                     .font(.system(size: 22, weight: .semibold))
