@@ -20,6 +20,8 @@ struct SettingsView: View {
                 Toggle("Menu Bar Icon", isOn: $settings.showStatusItem)
             }
 
+            Section("Permissions") { PermissionRows() }
+
             Section("Background") {
                 Picker("Background", selection: $settings.bgMode) {
                     Text("Current Wallpaper").tag("wallpaper")
@@ -49,7 +51,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 470)   // 내용이 다 보이도록 고정 높이 (스크롤 생기지 않게)
+        .frame(width: 440, height: 600)   // 내용이 다 보이도록 고정 높이 (스크롤 생기지 않게)
         .scrollDisabled(true)
         .background(WindowLevelRaiser())
     }

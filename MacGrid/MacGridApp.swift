@@ -70,8 +70,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var ui: UIState!
     private var drag: DragController!
     private var presented = false
+    private var shownAt = Date.distantPast   // 독 클릭 토글: 방금 활성화로 뜬 직후의 reopen 은 무시
     private var wallpaperKey = ""
 
+    private var setupWindow: NSWindow?   // 권한 미허용 시 첫 실행 설정 창
     private var hotKey: HotKey?
     private var statusItem: NSStatusItem?
     private var subs = Set<AnyCancellable>()
@@ -114,8 +116,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             forName: NSWorkspace.activeSpaceDidChangeNotification, object: nil, queue: .main
         ) { [weak self] _ in MainActor.assumeIsolated { self?.hideLaunchpad() } }
 
+        // 권한이 빠져 있으면 런치패드 대신 설정 화면 (모두 허용해야 계속)
+        if !Permissions.shared.allGranted { showSetup() }
         // 로그인 항목으로 켜졌으면 런치패드를 띄우지 않고 조용히 대기
-        if launchedAsLoginItem { NSApp.hide(nil) } else { showLaunchpad() }
+        else if launchedAsLoginItem { NSApp.hide(nil) } else { showLaunchpad() }
+    }
+
+    private func showSetup() {
+        let w = NSWindow(contentRect: .zero, styleMask: [.titled], backing: .buffered, defer: false)
+        w.title = "MacGrid Setup"
+        w.isReleasedWhenClosed = false
+        w.contentView = NSHostingView(rootView: SetupView { [weak self] in
+            guard let self else { return }
+            self.setupWindow?.orderOut(nil)
+            self.setupWindow = nil
+            self.showLaunchpad()
+        })
+        w.center()
+        w.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        setupWindow = w
     }
 
     /// 로그인 항목(SMAppService)에 의해 실행됐는지 — 실행 Apple Event 의 속성으로 판별
@@ -150,7 +170,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
-        if !presented { showLaunchpad() }
+        if !presented, setupWindow == nil { showLaunchpad() }
+    }
+
+    /// 독 아이콘 클릭 (이미 실행 중일 때) → 런치패드처럼 열렸다 닫혔다 토글
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard setupWindow == nil else { return true }
+        if presented {
+            if Date().timeIntervalSince(shownAt) > 0.5 { hideLaunchpad() }   // didBecomeActive 가 방금 띄운 경우면 유지
+        } else { showLaunchpad() }
+        return false
     }
 
     func applicationDidResignActive(_ notification: Notification) {
@@ -163,6 +192,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func showLaunchpad() {
         guard !presented else { return }
         presented = true
+        shownAt = Date()
         ui.reset()
         store.refreshApps()
         if window.contentView == nil { window.contentView = NSHostingView(rootView: root) }

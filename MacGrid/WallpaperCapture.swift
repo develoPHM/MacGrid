@@ -36,12 +36,12 @@ enum WallpaperCapture {
 
     // MARK: 사진 앱 배경
 
-    /// Index.plist 의 SystemDefault → Desktop → Content
+    /// Index.plist 의 SystemDefault → Desktop(또는 배경·화면보호기 연동 시 Linked) → Content
     private static func currentContent() -> [String: Any]? {
         guard let data = try? Data(contentsOf: storeURL),
               let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
               let sys = root["SystemDefault"] as? [String: Any],
-              let desktop = sys["Desktop"] as? [String: Any] else { return nil }
+              let desktop = sys["Desktop"] as? [String: Any] ?? sys["Linked"] as? [String: Any] else { return nil }
         return desktop["Content"] as? [String: Any]
     }
 
