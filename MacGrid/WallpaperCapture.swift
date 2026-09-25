@@ -28,7 +28,9 @@ enum WallpaperCapture {
         // 사진 앱(Photos) 라이브러리에서 고른 배경: 파일이 없고 자산 ID만 있다 → PhotoKit (사진 접근 권한 1회)
         if let id = photosAssetID() { return await photosImage(identifier: id, targetSize: target) }
 
-        guard let url = await userImageURL(for: screen) ?? currentWallpaperFile(dark: dark) else { return nil }
+        // 아무것도 못 찾으면 OS 기본 배경 (내장 배경 설정 시 시스템이 가리키는 파일)
+        let fallback = URL(fileURLWithPath: "/System/Library/CoreServices/DefaultDesktop.heic")
+        let url = await userImageURL(for: screen) ?? currentWallpaperFile(dark: dark) ?? fallback
         guard let src = NSImage(contentsOf: url),
               let cg = src.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         return downscaled(cg, targetSize: target)
@@ -36,13 +38,19 @@ enum WallpaperCapture {
 
     // MARK: 사진 앱 배경
 
-    /// Index.plist 의 SystemDefault → Desktop(또는 배경·화면보호기 연동 시 Linked) → Content
+    /// Index.plist 의 {SystemDefault|AllSpacesAndDisplays} → {Desktop|Linked} → Content
+    /// (OS 버전과 "배경·화면보호기 연동" 여부에 따라 키가 달라 모두 시도)
     private static func currentContent() -> [String: Any]? {
         guard let data = try? Data(contentsOf: storeURL),
-              let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let sys = root["SystemDefault"] as? [String: Any],
-              let desktop = sys["Desktop"] as? [String: Any] ?? sys["Linked"] as? [String: Any] else { return nil }
-        return desktop["Content"] as? [String: Any]
+              let root = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else { return nil }
+        for section in ["SystemDefault", "AllSpacesAndDisplays"] {
+            guard let sec = root[section] as? [String: Any] else { continue }
+            for key in ["Desktop", "Linked"] {
+                if let content = (sec[key] as? [String: Any])?["Content"] as? [String: Any],
+                   !((content["Choices"] as? [[String: Any]]) ?? []).isEmpty { return content }
+            }
+        }
+        return nil
     }
 
     private static func photosAssetID() -> String? {
